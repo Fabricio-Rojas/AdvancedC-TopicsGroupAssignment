@@ -20,8 +20,8 @@ namespace AdvancedC_TopicsGroupAssignment.Models
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         [StringLength(100, ErrorMessage = "Email cannot exceed 100 characters.")]
         public string Email { get; set; }
-        
-       // public List<Address> Addresses { get; set; } 
-        public List<Person> Persons { get; set; } 
+
+        public HashSet<Address> Addresses { get; set; }
+        public HashSet<BusinessPerson> BusinessPersons { get; set; }
     }
 }

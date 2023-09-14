@@ -25,9 +25,9 @@ namespace AdvancedC_TopicsGroupAssignment.Models
         [Required(ErrorMessage = "Phone Number is required.")]
         [RegularExpression(@"^\d{3}-\d{3}-\d{4}$", ErrorMessage = "Invalid phone number format. Use ###-###-####.")]
         public string PhoneNumber { get; set; }
-        // Hey
-       // public List<Address> Addresses { get; set; }
-        public List<Business> Businesses { get; set; }
-        public string hhvu { get; set; }
+
+        public HashSet<Address> Addresses { get; set; }
+        public HashSet<BusinessPerson> BusinessPersons { get; set; }
+
     }
 }
