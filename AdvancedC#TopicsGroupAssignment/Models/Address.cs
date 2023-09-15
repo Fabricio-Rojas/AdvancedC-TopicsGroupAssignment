@@ -26,9 +26,8 @@ namespace AdvancedC_TopicsGroupAssignment.Models
         [Display(Name = "Postal Code")]
         public string PostalCode { get; set; }
 
-        [Required(ErrorMessage = "Business Id is required.")]
         [Display(Name = "Business Id")]
-        public int BusinessId { get; set; }
+        public int? BusinessId { get; set; }
 
         [ForeignKey(nameof(BusinessId))]
         public Business Business { get; set; }
