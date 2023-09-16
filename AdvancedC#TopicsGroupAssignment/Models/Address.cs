@@ -21,7 +21,7 @@ namespace AdvancedC_TopicsGroupAssignment.Models
         public int? UnitNumber { get; set; }
 
         [Required]
-        [RegularExpression(@"^[A-Za-z]\d[A-Za-z]\s\d[A-Za-z]\d$")]
+        [RegularExpression(@"^[A-Za-z]\d[A-Za-z]\s\d[A-Za-z]\d$", ErrorMessage = "Please enter a valid Postal Code (ie. A1A 1A1)")]
         [StringLength(7)]
         [Display(Name = "Postal Code")]
         public string PostalCode { get; set; }
