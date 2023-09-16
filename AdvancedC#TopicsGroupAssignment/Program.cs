@@ -1,4 +1,5 @@
 using AdvancedC_TopicsGroupAssignment.Data;
+
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,5 +35,19 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Seed the database
+
+
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ContactInfoContext>();
+    context.Database.EnsureCreated();
+    DbInitializer.Initialize(context);
+} 
+
 
 app.Run();
