@@ -1,12 +1,4 @@
 ﻿using AdvancedC_TopicsGroupAssignment.Models;
-using CsvHelper.Configuration;
-using CsvHelper;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Diagnostics.Metrics;
-using System.Reflection;
-using Microsoft.Data.SqlClient;
 
 namespace AdvancedC_TopicsGroupAssignment.Data
 {
@@ -21,7 +13,7 @@ namespace AdvancedC_TopicsGroupAssignment.Data
             {
                 return; // Database has been seeded
             }
-            
+
             SeedDataFromCSV(context);
         }
 
@@ -70,7 +62,7 @@ namespace AdvancedC_TopicsGroupAssignment.Data
             context.Businesses.AddRange(businesses);
             context.SaveChanges();
         }
-        
+
         private static void SeedAddresses(ContactInfoContext context, string fileName)
         {
             List<Address> addresses = new List<Address>();
@@ -184,73 +176,6 @@ namespace AdvancedC_TopicsGroupAssignment.Data
 
             context.PersonAddresses.AddRange(personAddresses);
             context.SaveChanges();
-        }
-
-
-        private static List<T> ReadCSV<T, TMap>(string fileName)
-            where T : class
-            where TMap : ClassMap<T>
-        {
-            using (var reader = new StreamReader(fileName))
-            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
-            {
-                return csv.GetRecords<T>().ToList();
-            }
-        }
-    }
-    public class AddressMap : ClassMap<Address>
-    {
-        public AddressMap()
-        {
-            Map(m => m.Id).Name("Id");
-            Map(m => m.StreetName).Name("StreetName");
-            Map(m => m.StreetNumber).Name("StreetNumber");
-            Map(m => m.UnitNumber).Name("UnitNumber");
-            Map(m => m.PostalCode).Name("PostalCode");
-            Map(m => m.BusinessId).Name("BusinessId");
-        }
-    }
-
-    public class BusinessMap : ClassMap<Business>
-    {
-        public BusinessMap()
-        {
-            Map(m => m.Id).Name("Id");
-            Map(m => m.Name).Name("Name");
-            Map(m => m.PhoneNumber).Name("PhoneNumber");
-            Map(m => m.Email).Name("Email");
-        }
-    }
-
-    public class PersonMap : ClassMap<Person>
-    {
-        public PersonMap()
-        {
-            Map(m => m.Id).Name("Id");
-            Map(m => m.FirstName).Name("FirstName");
-            Map(m => m.LastName).Name("LastName");
-            Map(m => m.Email).Name("Email");
-            Map(m => m.PhoneNumber).Name("PhoneNumber");
-        }
-    }
-
-    public class BusinessPersonMap : ClassMap<BusinessPerson>
-    {
-        public BusinessPersonMap()
-        {
-            Map(m => m.Id).Name("Id");
-            Map(m => m.BusinessId).Name("BusinessId");
-            Map(m => m.PersonId).Name("PersonId");
-        }
-    }
-
-    public class PersonAddressMap : ClassMap<PersonAddress>
-    {
-        public PersonAddressMap()
-        {
-            Map(m => m.Id).Name("Id");
-            Map(m => m.PersonId).Name("PersonId");
-            Map(m => m.AddressId).Name("AddressId");
         }
     }
 }
