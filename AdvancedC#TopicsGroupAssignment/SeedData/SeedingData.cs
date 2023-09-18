@@ -21,28 +21,11 @@ namespace AdvancedC_TopicsGroupAssignment.Data
             {
                 return; // Database has been seeded
             }
-
-            string connectionString = "Server=localhost\\SQLEXPRESS;Database=ContactInfoDB;Integrated Security=True;TrustServerCertificate=True";
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-
-                SeedDataFromCSV(context, connection);
-
-                connection.Close();
-            }
+            
+            SeedDataFromCSV(context);
         }
 
-        private static void SetIdentityInsert(SqlConnection connection, SqlTransaction transaction, string tableName, bool enable)
-        {
-            string commandText = $"SET IDENTITY_INSERT {tableName} {(enable ? "ON" : "OFF")};";
-            using (SqlCommand command = new SqlCommand(commandText, connection, transaction))
-            {
-                command.ExecuteNonQuery();
-            }
-        }
-
-        private static void SeedDataFromCSV(ContactInfoContext context, SqlConnection connection)
+        private static void SeedDataFromCSV(ContactInfoContext context)
         {
             string currentDirectory = Directory.GetCurrentDirectory();
 
@@ -53,70 +36,152 @@ namespace AdvancedC_TopicsGroupAssignment.Data
             string businessPersonCsvPath = Path.Combine(currentDirectory, "SeedData", "BusinessPerson.csv");
             string personAddressesCsvPath = Path.Combine(currentDirectory, "SeedData", "PersonAddresses.csv");
 
-            using (SqlTransaction transaction = connection.BeginTransaction())
-            {
-                try
-                {
-                    SetIdentityInsert(connection, transaction, "Businesses", true);
-                    SeedBusinesses(context, businessesCsvPath);
-                    SetIdentityInsert(connection, transaction, "Businesses", false);
-
-                    SetIdentityInsert(connection, transaction, "Addresses", true);
-                    SeedAddresses(context, addressesCsvPath);
-                    SetIdentityInsert(connection, transaction, "Addresses", false);
-
-                    SetIdentityInsert(connection, transaction, "Persons", true);
-                    SeedPerson(context, personCsvPath);
-                    SetIdentityInsert(connection, transaction, "Persons", false);
-
-                    SetIdentityInsert(connection, transaction, "BusinessPersons", true);
-                    SeedBusinessPersons(context, businessPersonCsvPath);
-                    SetIdentityInsert(connection, transaction, "BusinessPersons", false);
-                
-                    SetIdentityInsert(connection, transaction, "PersonAddresses", true);
-                    SeedPersonAddresses(context, personAddressesCsvPath);
-                    SetIdentityInsert(connection, transaction, "PersonAddresses", false);
-
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                }
-            }
-        }
-        
-        private static void SeedAddresses(ContactInfoContext context, string fileName)
-        {
-            var addresses = ReadCSV<Address, AddressMap>(fileName);
-            context.Addresses.AddRange(addresses);
-            context.SaveChanges();
+            SeedBusinesses(context, businessesCsvPath);
+            SeedAddresses(context, addressesCsvPath);
+            SeedPerson(context, personCsvPath);
+            SeedBusinessPersons(context, businessPersonCsvPath);
+            SeedPersonAddresses(context, personAddressesCsvPath);
         }
 
         private static void SeedBusinesses(ContactInfoContext context, string fileName)
         {
-            var businesses = ReadCSV<Business, BusinessMap>(fileName);
+            List<Business> businesses = new List<Business>();
+
+            StreamReader reader = new StreamReader(fileName);
+            string text = reader.ReadToEnd();
+            string[] lines = text.Split("\r\n");
+
+            foreach (string data in lines)
+            {
+                if (data == lines[0]) continue;
+
+                string[] columns = data.Split(',');
+
+                Business business = new Business()
+                {
+                    Name = columns[1],
+                    PhoneNumber = columns[2],
+                    Email = columns[3],
+                };
+
+                businesses.Add(business);
+            }
+
             context.Businesses.AddRange(businesses);
+            context.SaveChanges();
+        }
+        
+        private static void SeedAddresses(ContactInfoContext context, string fileName)
+        {
+            List<Address> addresses = new List<Address>();
+
+            StreamReader reader = new StreamReader(fileName);
+            string text = reader.ReadToEnd();
+            string[] lines = text.Split("\r\n");
+
+            foreach (string data in lines)
+            {
+                if (data == lines[0]) continue;
+
+                string[] columns = data.Split(',');
+
+                bool hasUnit = int.TryParse(columns[3], out int unit);
+
+                Address address = new Address()
+                {
+                    StreetName = columns[1],
+                    StreetNumber = int.Parse(columns[2]),
+                    UnitNumber = hasUnit ? unit : null,
+                    PostalCode = columns[4],
+                    BusinessId = int.Parse(columns[5])
+                };
+
+                addresses.Add(address);
+            }
+
+            context.Addresses.AddRange(addresses);
             context.SaveChanges();
         }
 
         private static void SeedPerson(ContactInfoContext context, string fileName)
         {
-            var people = ReadCSV<Person, PersonMap>(fileName);
+            List<Person> people = new List<Person>();
+
+            StreamReader reader = new StreamReader(fileName);
+            string text = reader.ReadToEnd();
+            string[] lines = text.Split("\r\n");
+
+            foreach (string data in lines)
+            {
+                if (data == lines[0]) continue;
+
+                string[] columns = data.Split(',');
+
+                Person person = new Person()
+                {
+                    FirstName = columns[1],
+                    LastName = columns[2],
+                    Email = columns[3],
+                    PhoneNumber = columns[4]
+                };
+
+                people.Add(person);
+            }
+
             context.Persons.AddRange(people);
             context.SaveChanges();
         }
 
         private static void SeedBusinessPersons(ContactInfoContext context, string fileName)
         {
-            var businessPersons = ReadCSV<BusinessPerson, BusinessPersonMap>(fileName);
-            context.BusinessPersons.AddRange(businessPersons);
+            List<BusinessPerson> businessPeople = new List<BusinessPerson>();
+
+            StreamReader reader = new StreamReader(fileName);
+            string text = reader.ReadToEnd();
+            string[] lines = text.Split("\r\n");
+
+            foreach (string data in lines)
+            {
+                if (data == lines[0]) continue;
+
+                string[] columns = data.Split(',');
+
+                BusinessPerson businessPerson = new BusinessPerson()
+                {
+                    BusinessId = int.Parse(columns[1]),
+                    PersonId = int.Parse(columns[2])
+                };
+
+                businessPeople.Add(businessPerson);
+            }
+
+            context.BusinessPersons.AddRange(businessPeople);
             context.SaveChanges();
         }
 
         private static void SeedPersonAddresses(ContactInfoContext context, string fileName)
         {
-            var personAddresses = ReadCSV<PersonAddress, PersonAddressMap>(fileName);
+            List<PersonAddress> personAddresses = new List<PersonAddress>();
+
+            StreamReader reader = new StreamReader(fileName);
+            string text = reader.ReadToEnd();
+            string[] lines = text.Split("\r\n");
+
+            foreach (string data in lines)
+            {
+                if (data == lines[0]) continue;
+
+                string[] columns = data.Split(',');
+
+                PersonAddress personAddress = new PersonAddress()
+                {
+                    PersonId = int.Parse(columns[1]),
+                    AddressId = int.Parse(columns[2])
+                };
+
+                personAddresses.Add(personAddress);
+            }
+
             context.PersonAddresses.AddRange(personAddresses);
             context.SaveChanges();
         }
