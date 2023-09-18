@@ -24,7 +24,7 @@ namespace AdvancedC_TopicsGroupAssignment.Models
         [Display(Name = "Email")]
         public string Email { get; set; }
 
-        public HashSet<Address> Addresses { get; set; }
-        public HashSet<BusinessPerson> People { get; set; }
+        public HashSet<Address> Addresses { get; set; } = new();
+        public HashSet<BusinessPerson> People { get; set; } = new();
     }
 }

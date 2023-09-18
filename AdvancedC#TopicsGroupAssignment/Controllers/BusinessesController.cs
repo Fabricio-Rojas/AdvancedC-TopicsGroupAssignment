@@ -36,11 +36,17 @@ namespace AdvancedC_TopicsGroupAssignment.Controllers
             }
 
             var business = await _context.Businesses
+                .Include(b => b.Addresses)
+                .Include(b => b.People)
+                .ThenInclude(bp => bp.Person)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (business == null)
             {
                 return NotFound();
             }
+
+            ViewBag.Addresses = await _context.Addresses.ToListAsync();
+            ViewBag.People = await _context.Persons.ToListAsync();
 
             return View(business);
         }
@@ -153,6 +159,176 @@ namespace AdvancedC_TopicsGroupAssignment.Controllers
             
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddAddress(int businessId, int addressId)
+        {
+            Business? newBusiness = await _context.Businesses
+                .Include(b => b.Addresses)
+                .FirstOrDefaultAsync(b => b.Id == businessId);
+
+            Address? address = await _context.Addresses
+                .Include(a => a.Business)
+                .FirstOrDefaultAsync(a => a.Id == addressId);
+
+            if (newBusiness == null || address == null)
+            {
+                return NotFound();
+            }
+
+            Business? oldBusiness = await _context.Businesses
+                .Include(b => b.Addresses)
+                .FirstOrDefaultAsync (b => b.Id == address.BusinessId);
+
+            if (oldBusiness == null)
+            {
+                return NotFound();
+            }
+
+            address.BusinessId = newBusiness.Id;
+            address.Business = newBusiness;
+            oldBusiness.Addresses.Remove(address);
+            newBusiness.Addresses.Add(address);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = businessId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddPerson(int personId, int businessId)
+        {
+            Person? person = await _context.Persons
+                .Include(p => p.Businesses)
+                .FirstOrDefaultAsync(p => p.Id == personId);
+
+            Business? business = await _context.Businesses
+                .Include(b => b.People)
+                .FirstOrDefaultAsync(b => b.Id == businessId);
+
+            if (person == null || business == null)
+            {
+                return NotFound();
+            }
+
+            BusinessPerson businessPerson = new BusinessPerson { PersonId = personId, BusinessId = businessId };
+            person.Businesses.Add(businessPerson);
+            business.People.Add(businessPerson);
+            _context.BusinessPersons.Add(businessPerson);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = businessId });
+        }
+
+        public IActionResult AddNewAddress(int businessId)
+        {
+            ViewBag.BusinessId = businessId;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddNewAddress([Bind("Id,StreetName,StreetNumber,UnitNumber,PostalCode,BusinessId")] Address address, int businessId)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Addresses.Add(address);
+                await _context.SaveChangesAsync();
+
+                Business business = _context.Businesses
+                    .Include(b => b.Addresses)
+                    .First(b => b.Id == businessId);
+
+                business.Addresses.Add(address);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Details), new { id = businessId });
+            }
+            ViewBag.BusinessId = businessId;
+            return View(address);
+        }
+
+        public IActionResult AddNewPerson(int businessId)
+        {
+            ViewBag.BusinessId = businessId;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddNewPerson([Bind("Id,FirstName,LastName,Email,PhoneNumber")] Person person, int businessId)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Persons.Add(person);
+                await _context.SaveChangesAsync();
+
+                Business business = _context.Businesses
+                    .Include(b => b.People)
+                    .First(b => b.Id == businessId);
+
+                BusinessPerson businessPerson = new() { PersonId = businessId, BusinessId = person.Id };
+                person.Businesses.Add(businessPerson);
+                business.People.Add(businessPerson);
+                _context.BusinessPersons.Add(businessPerson);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Details), new { id = businessId });
+            }
+            ViewBag.BusinessId = businessId;
+            return View(person);
+        }
+
+        public async Task<IActionResult> RemoveAddress(int businessId, int addressId)
+        {
+            Business? business = await _context.Businesses
+                .Include(b => b.Addresses)
+                .FirstOrDefaultAsync(b => b.Id == businessId);
+
+            Address? address = await _context.Addresses
+                .Include(a => a.Business)
+                .FirstOrDefaultAsync(a => a.Id == addressId);
+
+            if (business == null || address == null)
+            {
+                return NotFound();
+            }
+
+            business.Addresses.Remove(address);
+            address.Business = default;
+            address.BusinessId = default;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = businessId });
+        }
+
+        public async Task<IActionResult> RemovePerson(int personId, int businessId)
+        {
+            Person? person = await _context.Persons
+                .Include(p => p.Businesses)
+                .FirstOrDefaultAsync(p => p.Id == personId);
+
+            Business? business = await _context.Businesses
+                .Include(b => b.People)
+                .FirstOrDefaultAsync(b => b.Id == businessId);
+
+            if (person == null || business == null)
+            {
+                return NotFound();
+            }
+
+            BusinessPerson? businessPerson = business.People.FirstOrDefault(bp => bp.PersonId == personId);
+            if (businessPerson != null)
+            {
+                person.Businesses.Remove(businessPerson);
+                business.People.Remove(businessPerson);
+                _context.BusinessPersons.Remove(businessPerson);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Details), new { id = businessId });
         }
 
         private bool BusinessExists(int id)

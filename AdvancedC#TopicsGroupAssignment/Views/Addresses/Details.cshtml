@@ -35,14 +35,55 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.PostalCode)
         </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.BusinessId)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.BusinessId)
+        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Business)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Business.Email)
+            <a asp-action="Details" asp-controller="Businesses" asp-route-id="@Model.BusinessId">@Html.DisplayFor(model => model.Business.Name)</a>
         </dd>
     </dl>
 </div>
+<div>
+    <h4>People</h4>
+    <ul>
+        @if (Model.People.Count == 0)
+        {
+            <p>
+                No People yet
+            </p>
+        }
+        @foreach (PersonAddress person in Model.People)
+        {
+            <li>
+                <a asp-action="Details" asp-controller="People" asp-route-id="@person.PersonId">@person.Person.FirstName @person.Person.LastName</a>
+                <span> | </span>
+                <a asp-action="RemovePerson" asp-controller="Addresses" asp-route-personId="@person.PersonId" asp-route-addressId="@person.AddressId">Remove</a>
+            </li>
+        }
+    </ul>
+    <div>
+        <h5>Add Person</h5>
+        <form asp-action="AddPerson" asp-controller="Addresses" method="post">
+            <input type="hidden" name="addressId" value="@Model.Id" />
+            <select name="personId">
+                <option value="">Select a person</option>
+                @foreach (var person in ViewBag.People)
+                {
+                    <option value="@person.Id">@person.FirstName</option>
+                }
+            </select>
+            <button type="submit">Add</button>
+        </form>
+        <a asp-action="AddNewPerson" asp-route-addressId="@Model.Id">Add New Person</a>
+    </div>
+</div>
+<br />
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>

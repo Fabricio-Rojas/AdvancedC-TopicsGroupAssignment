@@ -30,8 +30,8 @@ namespace AdvancedC_TopicsGroupAssignment.Models
         [Display(Name = "Phone Number")]
         public string PhoneNumber { get; set; }
 
-        public HashSet<PersonAddress> Addresses { get; set; }
-        public HashSet<BusinessPerson> Businesses { get; set; }
+        public HashSet<PersonAddress> Addresses { get; set; } = new();
+        public HashSet<BusinessPerson> Businesses { get; set; } = new();
 
     }
 }

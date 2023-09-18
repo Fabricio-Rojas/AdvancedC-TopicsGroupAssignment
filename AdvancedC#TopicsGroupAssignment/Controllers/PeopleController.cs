@@ -36,11 +36,18 @@ namespace AdvancedC_TopicsGroupAssignment.Controllers
             }
 
             var person = await _context.Persons
+                .Include(p => p.Addresses)
+                .ThenInclude(pa => pa.Address)
+                .Include(p => p.Businesses)
+                .ThenInclude(bp => bp.Business)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (person == null)
             {
                 return NotFound();
             }
+
+            ViewBag.Addresses = await _context.Addresses.ToListAsync();
+            ViewBag.Businesses = await _context.Businesses.ToListAsync();
 
             return View(person);
         }
@@ -153,6 +160,176 @@ namespace AdvancedC_TopicsGroupAssignment.Controllers
             
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddAddress(int personId, int addressId)
+        {
+            Person? person = await _context.Persons
+                .Include(p => p.Addresses)
+                .FirstOrDefaultAsync(p => p.Id == personId);
+
+            Address? address = await _context.Addresses
+                .Include(a => a.People)
+                .FirstOrDefaultAsync(a => a.Id == addressId);
+
+            if (person == null || address == null)
+            {
+                return NotFound();
+            }
+
+            PersonAddress personAddress = new PersonAddress { PersonId = personId, AddressId = addressId };
+            person.Addresses.Add(personAddress);
+            address.People.Add(personAddress);
+            _context.PersonAddresses.Add(personAddress);
+            await _context.SaveChangesAsync();
+            
+            return RedirectToAction(nameof(Details), new { id = personId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddBusiness(int personId, int businessId)
+        {
+            Person? person = await _context.Persons
+                .Include(p => p.Businesses)
+                .FirstOrDefaultAsync(p => p.Id == personId);
+
+            Business? business = await _context.Businesses
+                .Include(b => b.People)
+                .FirstOrDefaultAsync(b => b.Id == businessId);
+
+            if (person == null || business == null)
+            {
+                return NotFound();
+            }
+
+            BusinessPerson businessPerson = new BusinessPerson { PersonId = personId, BusinessId = businessId };
+            person.Businesses.Add(businessPerson);
+            business.People.Add(businessPerson);
+            _context.BusinessPersons.Add(businessPerson);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = personId });
+        }
+
+        public IActionResult AddNewAddress(int personId)
+        {
+            ViewData["BusinessId"] = new SelectList(_context.Businesses, "Id", "Name");
+            ViewBag.PersonId = personId;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddNewAddress([Bind("Id,StreetName,StreetNumber,UnitNumber,PostalCode,BusinessId")] Address address, int personId)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Addresses.Add(address);
+                await _context.SaveChangesAsync();
+
+                Person person = _context.Persons
+                    .Include(p => p.Addresses)
+                    .First(p => p.Id == personId);
+
+                PersonAddress personAddress = new() { PersonId = personId, AddressId = address.Id };
+                person.Addresses.Add(personAddress);
+                address.People.Add(personAddress);
+                _context.PersonAddresses.Add(personAddress);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Details), new { id = personId });
+            }
+            ViewBag.PersonId = personId;
+            ViewData["BusinessId"] = new SelectList(_context.Businesses, "Id", "Name", address.BusinessId);
+            return View(address);
+        }
+
+        public IActionResult AddNewBusiness(int personId)
+        {
+            ViewBag.PersonId = personId;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddNewBusiness([Bind("Id,Name,PhoneNumber,Email")] Business business, int personId)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Businesses.Add(business);
+                await _context.SaveChangesAsync();
+
+                Person person = _context.Persons
+                    .Include(p => p.Businesses)
+                    .First(p => p.Id == personId);
+
+                BusinessPerson businessPerson = new() { PersonId = personId, BusinessId = business.Id};
+                person.Businesses.Add(businessPerson);
+                business.People.Add(businessPerson);
+                _context.BusinessPersons.Add(businessPerson);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Details), new { id = personId });
+            }
+            ViewBag.PersonId = personId;
+            return View(business);
+        }
+
+        public async Task<IActionResult> RemoveAddress(int personId, int addressId)
+        {
+            Person? person = await _context.Persons
+                .Include(p => p.Addresses)
+                .FirstOrDefaultAsync(p => p.Id == personId);
+
+            Address? address = await _context.Addresses
+                .Include(a => a.People)
+                .FirstOrDefaultAsync(a => a.Id == addressId);
+
+            if (person == null || address == null)
+            {
+                return NotFound();
+            }
+
+            PersonAddress? personAddress = person.Addresses.FirstOrDefault(pa => pa.AddressId == addressId);
+            if (personAddress != null)
+            {
+                person.Addresses.Remove(personAddress);
+                address.People.Remove(personAddress);
+                _context.PersonAddresses.Remove(personAddress);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Details), new { id = personId });
+        }
+
+        public async Task<IActionResult> RemoveBusiness(int personId, int businessId)
+        {
+            Person? person = await _context.Persons
+                .Include(p => p.Businesses)
+                .FirstOrDefaultAsync(p => p.Id == personId);
+
+            Business? business = await _context.Businesses
+                .Include(b => b.People)
+                .FirstOrDefaultAsync(b => b.Id == businessId);
+
+            if (person == null || business == null)
+            {
+                return NotFound();
+            }
+
+            BusinessPerson? businessPerson = person.Businesses.FirstOrDefault(bp => bp.BusinessId == businessId);
+            if (businessPerson != null)
+            {
+                person.Businesses.Remove(businessPerson);
+                business.People.Remove(businessPerson);
+                _context.BusinessPersons.Remove(businessPerson);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Details), new { id = personId });
         }
 
         private bool PersonExists(int id)

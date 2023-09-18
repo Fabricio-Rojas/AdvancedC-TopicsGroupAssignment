@@ -61,7 +61,7 @@ namespace AdvancedC_TopicsGroupAssignment.Migrations
                         column: x => x.BusinessId,
                         principalTable: "Businesses",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(

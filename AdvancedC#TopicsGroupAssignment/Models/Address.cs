@@ -32,6 +32,6 @@ namespace AdvancedC_TopicsGroupAssignment.Models
         [ForeignKey(nameof(BusinessId))]
         public Business Business { get; set; }
 
-        public HashSet<PersonAddress> People { get; set; }
+        public HashSet<PersonAddress> People { get; set; } = new();
     }
 }

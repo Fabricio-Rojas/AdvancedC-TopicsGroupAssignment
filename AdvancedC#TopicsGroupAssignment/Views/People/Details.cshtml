@@ -11,33 +11,104 @@
     <h4>Person</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.FirstName)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.FirstName)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.LastName)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.LastName)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Email)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Email)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.PhoneNumber)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.PhoneNumber)
         </dd>
     </dl>
 </div>
+
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <h4>Addresses</h4>
+    <ul>
+        @if (Model.Addresses.Count == 0)
+        {
+            <p>
+                No Addresses yet
+            </p>
+        }
+        @foreach (PersonAddress address in Model.Addresses)
+        {
+            <li>
+                <a asp-action="Details" asp-controller="Addresses" asp-route-id="@address.AddressId">@address.Address.StreetName</a>
+                <span> | </span>
+                <a asp-action="RemoveAddress" asp-controller="People" asp-route-personId="@address.PersonId" asp-route-addressId="@address.AddressId">Remove</a>
+            </li>
+        }
+    </ul>
+    <div>
+        <h5>Add Address</h5>
+        <form asp-action="AddAddress" asp-controller="People" method="post">
+            <input type="hidden" name="personId" value="@Model.Id" />
+            <select name="addressId">
+                <option value="">Select an address</option>
+                @foreach (var address in ViewBag.Addresses)
+                {
+                    <option value="@address.Id">@address.StreetName</option>
+                }
+            </select>
+            <button type="submit">Add</button>
+        </form>
+        <a asp-action="AddNewAddress" asp-route-personId="@Model.Id">Add New Address</a>
+    </div>
+</div>
+<br />
+<div>
+    <h4>Businesses</h4>
+    <ul>
+        @if (Model.Businesses.Count == 0)
+        {
+            <p>
+                No Businesses yet
+            </p>
+        }
+        @foreach (BusinessPerson business in Model.Businesses)
+        {
+            <li>
+                <a asp-action="Details" asp-controller="Businesses" asp-route-id="@business.BusinessId">@business.Business.Name</a>
+                <span> | </span>
+                <a asp-action="RemoveBusiness" asp-controller="People" asp-route-personId="@business.PersonId" asp-route-businessId="@business.BusinessId">Remove</a>
+            </li>
+        }
+    </ul>
+    <div>
+        <h5>Add Business</h5>
+        <form asp-action="AddBusiness" asp-controller="People" method="post">
+            <input type="hidden" name="personId" value="@Model.Id" />
+            <select name="businessId">
+                <option value="">Select a business</option>
+                @foreach (var business in ViewBag.Businesses)
+                {
+                    <option value="@business.Id">@business.Name</option>
+                }
+            </select>
+            <button type="submit">Add</button>
+        </form>
+        <a asp-action="AddNewBusiness" asp-route-personId="@Model.Id">Add New Business</a>
+    </div>
+</div>
+<br />
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
