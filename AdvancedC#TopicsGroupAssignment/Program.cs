@@ -37,10 +37,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // Seed the database
-
-
-
-
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -48,6 +44,5 @@ using (var scope = app.Services.CreateScope())
     context.Database.EnsureCreated();
     DbInitializer.Initialize(context);
 } 
-
 
 app.Run();
